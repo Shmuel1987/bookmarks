@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookmarks</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <button id="theme-toggle" class="theme-toggle" title="Toggle light / dark theme">
+        <span id="theme-icon">🌙</span>
+        <span id="theme-label">Dark</span>
+      </button>
+      <h1>📚 Bookmarks</h1>
+      <p>Save links you care about, find them again in seconds.</p>
+    </header>
+
+    <section id="add-section" class="card">
+      <h2 class="section-title">➕ Add a bookmark</h2>
+      <form id="bookmark-form">
+        <div class="field full">
+          <label for="url">URL</label>
+          <input type="url" id="url" placeholder="https://example.com" required>
+        </div>
+        <div class="field full">
+          <label for="title">Title</label>
+          <input type="text" id="title" placeholder="e.g. MDN Web Docs" required>
+        </div>
+        <div class="field">
+          <label for="tag">Tag <span style="font-weight:400">(optional)</span></label>
+          <input type="text" id="tag" placeholder="e.g. Reading, Work">
+        </div>
+        <div class="field full">
+          <label for="note">Note <span style="font-weight:400">(optional)</span></label>
+          <textarea id="note" placeholder="Why did you save this?"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="reset" class="btn-ghost">Clear</button>
+          <button type="submit" class="btn-primary">Save bookmark</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="view-section" class="card">
+      <div class="section-header">
+        <h2 class="section-title" style="margin:0;">🔖 Your bookmarks</h2>
+        <div class="search-box">
+          <input type="text" id="search" placeholder="Search by title, URL, or tag...">
+        </div>
+        <span class="count-badge" id="count-badge">0 saved</span>
+      </div>
+      <div class="bookmark-list" id="bookmark-list"></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'bookmarks-app-v2';
+  const THEME_KEY = 'bookmarks-app-theme';
+
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  const themeLabel = document.getElementById('theme-label');
+
+  function systemPrefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function applyTheme(theme) {
+    // theme is 'light', 'dark', or null (follow system)
+    if (theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    const isDark = theme ? theme === 'dark' : systemPrefersDark();
+    themeIcon.textContent = isDark ? '☀️' : '🌙';
+    themeLabel.textContent = isDark ? 'Light' : 'Dark';
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    applyTheme(saved);
+  }
+
+  themeToggleBtn.addEventListener('click', () => {
+    const current = localStorage.getItem(THEME_KEY) || (systemPrefersDark() ? 'dark' : 'light');
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
+
+  initTheme();
+
+  const form = document.getElementById('bookmark-form');
+  const urlInput = document.getElementById('url');
+  const titleInput = document.getElementById('title');
+  const tagInput = document.getElementById('tag');
+  const noteInput = document.getElementById('note');
+  const listEl = document.getElementById('bookmark-list');
+  const searchEl = document.getElementById('search');
+  const countBadge = document.getElementById('count-badge');
+  const toastEl = document.getElementById('toast');
+
+  let bookmarks = loadBookmarks();
+
+  function loadBookmarks() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveBookmarks() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toastEl.classList.remove('show'), 1800);
+  }
+
+  function normalizeUrl(value) {
+    try {
+      return new URL(value).href;
+    } catch {
+      return new URL('https://' + value).href;
+    }
+  }
+
+  function faviconFor(url) {
+    try {
+      const host = new URL(url).hostname;
+      return `https://www.google.com/s2/favicons?sz=64&domain=${host}`;
+    } catch {
+      return '';
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function render() {
+    const query = searchEl.value.trim().toLowerCase();
+    const filtered = bookmarks.filter(b => {
+      if (!query) return true;
+      return (
+        b.title.toLowerCase().includes(query) ||
+        b.url.toLowerCase().includes(query) ||
+        (b.tag && b.tag.toLowerCase().includes(query))
+      );
+    });
+
+    countBadge.textContent = `${bookmarks.length} saved`;
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <span class="emoji">${bookmarks.length === 0 ? '🗂️' : '🔍'}</span>
+          ${bookmarks.length === 0
+            ? 'No bookmarks yet. Add your first one above!'
+            : 'No bookmarks match your search.'}
+        </div>`;
+      return;
+    }
+
+    listEl.innerHTML = filtered
+      .slice()
+      .reverse()
+      .map(b => `
+        <div class="bookmark" data-id="${b.id}">
+          <div class="favicon">
+            <img src="${faviconFor(b.url)}" alt="" onerror="this.style.display='none'">
+          </div>
+          <div class="bookmark-body">
+            <a class="bookmark-title" href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(b.title)}</a>
+            <a class="bookmark-url" href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(b.url)}</a>
+            ${b.note ? `<div class="bookmark-note">${escapeHtml(b.note)}</div>` : ''}
+            ${b.tag ? `<span class="tag">${escapeHtml(b.tag)}</span>` : ''}
+          </div>
+          <div class="bookmark-actions">
+            <button class="icon-btn visit" title="Open" onclick="window.open('${escapeHtml(b.url)}', '_blank')">↗</button>
+            <button class="icon-btn" title="Delete" onclick="deleteBookmark('${b.id}')">🗑</button>
+          </div>
+        </div>
+      `)
+      .join('');
+  }
+
+  function deleteBookmark(id) {
+    bookmarks = bookmarks.filter(b => b.id !== id);
+    saveBookmarks();
+    render();
+    showToast('Bookmark deleted');
+  }
+  window.deleteBookmark = deleteBookmark;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const url = normalizeUrl(urlInput.value.trim());
+    const title = titleInput.value.trim();
+    const tag = tagInput.value.trim();
+    const note = noteInput.value.trim();
+
+    if (!url || !title) return;
+
+    bookmarks.push({
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      url,
+      title,
+      tag,
+      note,
+      createdAt: Date.now()
+    });
+
+    saveBookmarks();
+    form.reset();
+    render();
+    showToast('Bookmark saved');
+  });
+
+  searchEl.addEventListener('input', render);
+
+  render();
+</script>
+</body>
+</html>
