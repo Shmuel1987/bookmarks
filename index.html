@@ -49,6 +49,10 @@
         <div class="search-box">
           <input type="text" id="search" placeholder="Search by title, URL, or tag...">
         </div>
+        <select id="category-filter" class="category-filter">
+          <option value="">All categories</option>
+        </select>
+        <button type="button" id="group-toggle" class="btn-ghost">Group by category</button>
         <span class="count-badge" id="count-badge">0 saved</span>
       </div>
       <div class="bookmark-list" id="bookmark-list"></div>
@@ -102,10 +106,13 @@
   const noteInput = document.getElementById('note');
   const listEl = document.getElementById('bookmark-list');
   const searchEl = document.getElementById('search');
+  const categoryFilterEl = document.getElementById('category-filter');
+  const groupToggleBtn = document.getElementById('group-toggle');
   const countBadge = document.getElementById('count-badge');
   const toastEl = document.getElementById('toast');
 
   let bookmarks = loadBookmarks();
+  let groupByCategory = false;
 
   function loadBookmarks() {
     try {
@@ -150,34 +157,22 @@
     return div.innerHTML;
   }
 
-  function render() {
-    const query = searchEl.value.trim().toLowerCase();
-    const filtered = bookmarks.filter(b => {
-      if (!query) return true;
-      return (
-        b.title.toLowerCase().includes(query) ||
-        b.url.toLowerCase().includes(query) ||
-        (b.tag && b.tag.toLowerCase().includes(query))
-      );
-    });
+  const UNCATEGORIZED = 'Uncategorized';
 
-    countBadge.textContent = `${bookmarks.length} saved`;
+  function categoryOf(b) {
+    return b.tag && b.tag.trim() ? b.tag.trim() : UNCATEGORIZED;
+  }
 
-    if (filtered.length === 0) {
-      listEl.innerHTML = `
-        <div class="empty-state">
-          <span class="emoji">${bookmarks.length === 0 ? '🗂️' : '🔍'}</span>
-          ${bookmarks.length === 0
-            ? 'No bookmarks yet. Add your first one above!'
-            : 'No bookmarks match your search.'}
-        </div>`;
-      return;
-    }
+  function renderCategoryOptions() {
+    const categories = Array.from(new Set(bookmarks.map(categoryOf))).sort((a, b) => a.localeCompare(b));
+    const current = categoryFilterEl.value;
+    categoryFilterEl.innerHTML = '<option value="">All categories</option>' +
+      categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    if (categories.includes(current)) categoryFilterEl.value = current;
+  }
 
-    listEl.innerHTML = filtered
-      .slice()
-      .reverse()
-      .map(b => `
+  function bookmarkCard(b) {
+    return `
         <div class="bookmark" data-id="${b.id}">
           <div class="favicon">
             <img src="${faviconFor(b.url)}" alt="" onerror="this.style.display='none'">
@@ -193,8 +188,58 @@
             <button class="icon-btn" title="Delete" onclick="deleteBookmark('${b.id}')">🗑</button>
           </div>
         </div>
-      `)
-      .join('');
+      `;
+  }
+
+  function render() {
+    renderCategoryOptions();
+
+    const query = searchEl.value.trim().toLowerCase();
+    const category = categoryFilterEl.value;
+    const filtered = bookmarks.filter(b => {
+      const matchesQuery = !query || (
+        b.title.toLowerCase().includes(query) ||
+        b.url.toLowerCase().includes(query) ||
+        (b.tag && b.tag.toLowerCase().includes(query))
+      );
+      const matchesCategory = !category || categoryOf(b) === category;
+      return matchesQuery && matchesCategory;
+    });
+
+    countBadge.textContent = `${bookmarks.length} saved`;
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <span class="emoji">${bookmarks.length === 0 ? '🗂️' : '🔍'}</span>
+          ${bookmarks.length === 0
+            ? 'No bookmarks yet. Add your first one above!'
+            : 'No bookmarks match your filters.'}
+        </div>`;
+      return;
+    }
+
+    const ordered = filtered.slice().reverse();
+
+    if (!groupByCategory) {
+      listEl.innerHTML = ordered.map(bookmarkCard).join('');
+      return;
+    }
+
+    const groups = new Map();
+    for (const b of ordered) {
+      const cat = categoryOf(b);
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(b);
+    }
+    const sortedCats = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b));
+
+    listEl.innerHTML = sortedCats.map(cat => `
+        <div class="category-group">
+          <h3 class="category-heading">${escapeHtml(cat)} <span class="category-count">${groups.get(cat).length}</span></h3>
+          ${groups.get(cat).map(bookmarkCard).join('')}
+        </div>
+      `).join('');
   }
 
   function deleteBookmark(id) {
@@ -230,6 +275,14 @@
   });
 
   searchEl.addEventListener('input', render);
+  categoryFilterEl.addEventListener('change', render);
+
+  groupToggleBtn.addEventListener('click', () => {
+    groupByCategory = !groupByCategory;
+    groupToggleBtn.classList.toggle('active', groupByCategory);
+    groupToggleBtn.textContent = groupByCategory ? 'Ungroup' : 'Group by category';
+    render();
+  });
 
   render();
 </script>
