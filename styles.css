@@ -93,10 +93,21 @@ header p {
   font-size: 0.95rem;
 }
 
-.theme-toggle {
+.header-controls {
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[dir="rtl"] .header-controls {
+  right: auto;
+  left: 0;
+}
+
+.theme-toggle {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -447,8 +458,9 @@ button:active { transform: scale(0.98); }
 
 @media (max-width: 560px) {
   form { grid-template-columns: 1fr; }
-  .theme-toggle {
+  .header-controls {
     position: static;
+    justify-content: center;
     margin: 0 auto 16px;
   }
   .category-filter {

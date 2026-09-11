@@ -9,51 +9,57 @@
 <body>
   <div class="wrap">
     <header>
-      <button id="theme-toggle" class="theme-toggle" title="Toggle light / dark theme">
-        <span id="theme-icon">🌙</span>
-        <span id="theme-label">Dark</span>
-      </button>
-      <h1>📚 Bookmarks</h1>
-      <p>Save links you care about, find them again in seconds.</p>
+      <div class="header-controls">
+        <button id="lang-toggle" class="theme-toggle" title="Switch language">
+          <span id="lang-icon">🌐</span>
+          <span id="lang-label">עברית</span>
+        </button>
+        <button id="theme-toggle" class="theme-toggle" title="Toggle light / dark theme">
+          <span id="theme-icon">🌙</span>
+          <span id="theme-label">Dark</span>
+        </button>
+      </div>
+      <h1 data-i18n="title">📚 Bookmarks</h1>
+      <p data-i18n="subtitle">Save links you care about, find them again in seconds.</p>
     </header>
 
     <section id="add-section" class="card">
-      <h2 class="section-title">➕ Add a bookmark</h2>
+      <h2 class="section-title" data-i18n="addSectionTitle">➕ Add a bookmark</h2>
       <form id="bookmark-form">
         <div class="field full">
-          <label for="url">URL</label>
-          <input type="url" id="url" placeholder="https://example.com" required>
+          <label for="url" data-i18n="labelUrl">URL</label>
+          <input type="url" id="url" data-i18n-placeholder="placeholderUrl" placeholder="https://example.com" required>
         </div>
         <div class="field full">
-          <label for="title">Title</label>
-          <input type="text" id="title" placeholder="e.g. MDN Web Docs" required>
+          <label for="title" data-i18n="labelTitle">Title</label>
+          <input type="text" id="title" data-i18n-placeholder="placeholderTitle" placeholder="e.g. MDN Web Docs" required>
         </div>
         <div class="field">
-          <label for="tag">Tag <span style="font-weight:400">(optional)</span></label>
-          <input type="text" id="tag" placeholder="e.g. Reading, Work">
+          <label for="tag"><span data-i18n="labelTag">Tag</span> <span style="font-weight:400" data-i18n="optional">(optional)</span></label>
+          <input type="text" id="tag" data-i18n-placeholder="placeholderTag" placeholder="e.g. Reading, Work">
         </div>
         <div class="field full">
-          <label for="note">Note <span style="font-weight:400">(optional)</span></label>
-          <textarea id="note" placeholder="Why did you save this?"></textarea>
+          <label for="note"><span data-i18n="labelNote">Note</span> <span style="font-weight:400" data-i18n="optional">(optional)</span></label>
+          <textarea id="note" data-i18n-placeholder="placeholderNote" placeholder="Why did you save this?"></textarea>
         </div>
         <div class="form-actions">
-          <button type="reset" class="btn-ghost">Clear</button>
-          <button type="submit" class="btn-primary">Save bookmark</button>
+          <button type="reset" class="btn-ghost" data-i18n="clear">Clear</button>
+          <button type="submit" class="btn-primary" data-i18n="save">Save bookmark</button>
         </div>
       </form>
     </section>
 
     <section id="view-section" class="card">
       <div class="section-header">
-        <h2 class="section-title" style="margin:0;">🔖 Your bookmarks</h2>
+        <h2 class="section-title" style="margin:0;" data-i18n="viewSectionTitle">🔖 Your bookmarks</h2>
         <div class="search-box">
-          <input type="text" id="search" placeholder="Search by title, URL, or tag...">
+          <input type="text" id="search" data-i18n-placeholder="searchPlaceholder" placeholder="Search by title, URL, or tag...">
         </div>
         <select id="category-filter" class="category-filter">
-          <option value="">All categories</option>
+          <option value="" data-i18n="allCategories">All categories</option>
         </select>
-        <button type="button" id="group-toggle" class="btn-ghost">Group by category</button>
-        <span class="count-badge" id="count-badge">0 saved</span>
+        <button type="button" id="group-toggle" class="btn-ghost" data-i18n="groupByCategory">Group by category</button>
+        <span class="count-badge" id="count-badge">0</span>
       </div>
       <div class="bookmark-list" id="bookmark-list"></div>
     </section>
@@ -64,6 +70,113 @@
 <script>
   const STORAGE_KEY = 'bookmarks-app-v2';
   const THEME_KEY = 'bookmarks-app-theme';
+  const LANG_KEY = 'bookmarks-app-lang';
+
+  const translations = {
+    en: {
+      title: '📚 Bookmarks',
+      subtitle: 'Save links you care about, find them again in seconds.',
+      addSectionTitle: '➕ Add a bookmark',
+      labelUrl: 'URL',
+      labelTitle: 'Title',
+      labelTag: 'Tag',
+      optional: '(optional)',
+      labelNote: 'Note',
+      placeholderUrl: 'https://example.com',
+      placeholderTitle: 'e.g. MDN Web Docs',
+      placeholderTag: 'e.g. Reading, Work',
+      placeholderNote: 'Why did you save this?',
+      clear: 'Clear',
+      save: 'Save bookmark',
+      viewSectionTitle: '🔖 Your bookmarks',
+      searchPlaceholder: 'Search by title, URL, or tag...',
+      allCategories: 'All categories',
+      groupByCategory: 'Group by category',
+      ungroup: 'Ungroup',
+      countSaved: n => `${n} saved`,
+      emptyNone: 'No bookmarks yet. Add your first one above!',
+      emptyFiltered: 'No bookmarks match your filters.',
+      open: 'Open',
+      delete: 'Delete',
+      toastSaved: 'Bookmark saved',
+      toastDeleted: 'Bookmark deleted',
+      uncategorized: 'Uncategorized',
+      themeDark: 'Dark',
+      themeLight: 'Light',
+      themeToggleTitle: 'Toggle light / dark theme',
+      langToggleTitle: 'Switch to Hebrew',
+      langLabel: 'עברית'
+    },
+    he: {
+      title: '📚 סימניות',
+      subtitle: 'שמרו קישורים שחשובים לכם, ומצאו אותם שוב תוך שניות.',
+      addSectionTitle: '➕ הוספת סימנייה',
+      labelUrl: 'כתובת URL',
+      labelTitle: 'כותרת',
+      labelTag: 'תגית',
+      optional: '(אופציונלי)',
+      labelNote: 'הערה',
+      placeholderUrl: 'https://example.com',
+      placeholderTitle: 'לדוגמה: MDN Web Docs',
+      placeholderTag: 'לדוגמה: קריאה, עבודה',
+      placeholderNote: 'למה שמרתם את זה?',
+      clear: 'ניקוי',
+      save: 'שמירת סימנייה',
+      viewSectionTitle: '🔖 הסימניות שלך',
+      searchPlaceholder: 'חיפוש לפי כותרת, כתובת או תגית...',
+      allCategories: 'כל הקטגוריות',
+      groupByCategory: 'קיבוץ לפי קטגוריה',
+      ungroup: 'ביטול קיבוץ',
+      countSaved: n => `${n} נשמרו`,
+      emptyNone: 'עדיין אין סימניות. הוסיפו את הראשונה למעלה!',
+      emptyFiltered: 'אין סימניות התואמות את הסינון שלכם.',
+      open: 'פתיחה',
+      delete: 'מחיקה',
+      toastSaved: 'הסימנייה נשמרה',
+      toastDeleted: 'הסימנייה נמחקה',
+      uncategorized: 'ללא קטגוריה',
+      themeDark: 'כהה',
+      themeLight: 'בהיר',
+      themeToggleTitle: 'מעבר בין מצב בהיר/כהה',
+      langToggleTitle: 'החלפה לאנגלית',
+      langLabel: 'English'
+    }
+  };
+
+  let lang = localStorage.getItem(LANG_KEY) || 'en';
+
+  function t(key) {
+    return translations[lang][key];
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+
+    langLabelEl.textContent = t('langLabel');
+    langToggleBtn.title = t('langToggleTitle');
+    themeToggleBtn.title = t('themeToggleTitle');
+    groupToggleBtn.textContent = groupByCategory ? t('ungroup') : t('groupByCategory');
+
+    applyTheme(localStorage.getItem(THEME_KEY));
+  }
+
+  const langToggleBtn = document.getElementById('lang-toggle');
+  const langLabelEl = document.getElementById('lang-label');
+
+  langToggleBtn.addEventListener('click', () => {
+    lang = lang === 'en' ? 'he' : 'en';
+    localStorage.setItem(LANG_KEY, lang);
+    applyLanguage();
+    render();
+  });
 
   const themeToggleBtn = document.getElementById('theme-toggle');
   const themeIcon = document.getElementById('theme-icon');
@@ -82,12 +195,7 @@
     }
     const isDark = theme ? theme === 'dark' : systemPrefersDark();
     themeIcon.textContent = isDark ? '☀️' : '🌙';
-    themeLabel.textContent = isDark ? 'Light' : 'Dark';
-  }
-
-  function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY);
-    applyTheme(saved);
+    themeLabel.textContent = isDark ? t('themeLight') : t('themeDark');
   }
 
   themeToggleBtn.addEventListener('click', () => {
@@ -96,8 +204,6 @@
     localStorage.setItem(THEME_KEY, next);
     applyTheme(next);
   });
-
-  initTheme();
 
   const form = document.getElementById('bookmark-form');
   const urlInput = document.getElementById('url');
@@ -157,16 +263,14 @@
     return div.innerHTML;
   }
 
-  const UNCATEGORIZED = 'Uncategorized';
-
   function categoryOf(b) {
-    return b.tag && b.tag.trim() ? b.tag.trim() : UNCATEGORIZED;
+    return b.tag && b.tag.trim() ? b.tag.trim() : t('uncategorized');
   }
 
   function renderCategoryOptions() {
     const categories = Array.from(new Set(bookmarks.map(categoryOf))).sort((a, b) => a.localeCompare(b));
     const current = categoryFilterEl.value;
-    categoryFilterEl.innerHTML = '<option value="">All categories</option>' +
+    categoryFilterEl.innerHTML = `<option value="">${escapeHtml(t('allCategories'))}</option>` +
       categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
     if (categories.includes(current)) categoryFilterEl.value = current;
   }
@@ -184,8 +288,8 @@
             ${b.tag ? `<span class="tag">${escapeHtml(b.tag)}</span>` : ''}
           </div>
           <div class="bookmark-actions">
-            <button class="icon-btn visit" title="Open" onclick="window.open('${escapeHtml(b.url)}', '_blank')">↗</button>
-            <button class="icon-btn" title="Delete" onclick="deleteBookmark('${b.id}')">🗑</button>
+            <button class="icon-btn visit" title="${escapeHtml(t('open'))}" onclick="window.open('${escapeHtml(b.url)}', '_blank')">↗</button>
+            <button class="icon-btn" title="${escapeHtml(t('delete'))}" onclick="deleteBookmark('${b.id}')">🗑</button>
           </div>
         </div>
       `;
@@ -206,15 +310,13 @@
       return matchesQuery && matchesCategory;
     });
 
-    countBadge.textContent = `${bookmarks.length} saved`;
+    countBadge.textContent = t('countSaved')(bookmarks.length);
 
     if (filtered.length === 0) {
       listEl.innerHTML = `
         <div class="empty-state">
           <span class="emoji">${bookmarks.length === 0 ? '🗂️' : '🔍'}</span>
-          ${bookmarks.length === 0
-            ? 'No bookmarks yet. Add your first one above!'
-            : 'No bookmarks match your filters.'}
+          ${bookmarks.length === 0 ? t('emptyNone') : t('emptyFiltered')}
         </div>`;
       return;
     }
@@ -246,7 +348,7 @@
     bookmarks = bookmarks.filter(b => b.id !== id);
     saveBookmarks();
     render();
-    showToast('Bookmark deleted');
+    showToast(t('toastDeleted'));
   }
   window.deleteBookmark = deleteBookmark;
 
@@ -271,7 +373,7 @@
     saveBookmarks();
     form.reset();
     render();
-    showToast('Bookmark saved');
+    showToast(t('toastSaved'));
   });
 
   searchEl.addEventListener('input', render);
@@ -280,10 +382,11 @@
   groupToggleBtn.addEventListener('click', () => {
     groupByCategory = !groupByCategory;
     groupToggleBtn.classList.toggle('active', groupByCategory);
-    groupToggleBtn.textContent = groupByCategory ? 'Ungroup' : 'Group by category';
+    groupToggleBtn.textContent = groupByCategory ? t('ungroup') : t('groupByCategory');
     render();
   });
 
+  applyLanguage();
   render();
 </script>
 </body>
