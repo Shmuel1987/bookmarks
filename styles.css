@@ -13,8 +13,10 @@
   --radius: 14px;
 }
 
+/* Dark palette: applied when the system prefers dark (and the user hasn't
+   explicitly chosen light), or when the user explicitly toggled to dark. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #14151a;
     --surface: #1d1f26;
     --border: #2c2f3a;
@@ -27,21 +29,6 @@
     --danger-soft: #3a2323;
     --shadow: 0 1px 2px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.35);
   }
-}
-
-/* Manual overrides, set via the theme toggle (data-theme on <html>) */
-:root[data-theme="light"] {
-  --bg: #f5f6fa;
-  --surface: #ffffff;
-  --border: #e3e5eb;
-  --text: #1b1d23;
-  --text-muted: #6b7080;
-  --accent: #6d5efc;
-  --accent-hover: #5a4bf0;
-  --accent-soft: #efecff;
-  --danger: #e5534b;
-  --danger-soft: #fdeceb;
-  --shadow: 0 1px 2px rgba(20,20,40,0.04), 0 8px 24px rgba(20,20,40,0.06);
 }
 
 :root[data-theme="dark"] {

@@ -303,8 +303,8 @@
             ${b.tag ? `<span class="tag">${escapeHtml(b.tag)}</span>` : ''}
           </div>
           <div class="bookmark-actions">
-            <button class="icon-btn visit" title="${escapeHtml(t('open'))}" onclick="window.open('${escapeHtml(b.url)}', '_blank')">↗</button>
-            <button class="icon-btn" title="${escapeHtml(t('delete'))}" onclick="deleteBookmark('${b.id}')">🗑</button>
+            <button class="icon-btn visit" data-action="visit" data-url="${escapeHtml(b.url)}" title="${escapeHtml(t('open'))}">↗</button>
+            <button class="icon-btn" data-action="delete" data-id="${b.id}" title="${escapeHtml(t('delete'))}">🗑</button>
           </div>
         </div>
       `;
@@ -365,7 +365,16 @@
     render();
     showToast(t('toastDeleted'));
   }
-  window.deleteBookmark = deleteBookmark;
+
+  listEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'visit') {
+      window.open(btn.dataset.url, '_blank');
+    } else if (btn.dataset.action === 'delete') {
+      deleteBookmark(btn.dataset.id);
+    }
+  });
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
