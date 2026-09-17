@@ -79,24 +79,65 @@ header {
   text-align: center;
   margin-bottom: 36px;
   position: relative;
+  padding: 44px 24px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #e5534b 0%, #b83228 100%);
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 header h1 {
-  font-size: 2rem;
-  margin: 0 0 6px;
+  font-size: 2.4rem;
+  margin: 0 0 8px;
   letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.logo-emoji {
+  display: inline-block;
+  width: 1.6em;
+  height: 1.6em;
+  vertical-align: -0.35em;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+  animation: logo-wobble 4s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+.logo-emoji svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+header h1:hover .logo-emoji {
+  animation: logo-bounce 0.6s ease;
+}
+
+@keyframes logo-wobble {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(6deg); }
+}
+
+@keyframes logo-bounce {
+  0% { transform: scale(1) rotate(-8deg); }
+  30% { transform: scale(1.3) rotate(12deg); }
+  50% { transform: scale(0.9) rotate(-14deg); }
+  70% { transform: scale(1.15) rotate(8deg); }
+  100% { transform: scale(1) rotate(-8deg); }
 }
 
 header p {
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.85);
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .header-controls {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -104,16 +145,17 @@ header p {
 
 [dir="rtl"] .header-controls {
   right: auto;
-  left: 0;
+  left: 16px;
 }
 
 .theme-toggle {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+  backdrop-filter: blur(6px);
   padding: 8px 14px;
   border-radius: 999px;
   font-size: 0.85rem;
@@ -122,7 +164,7 @@ header p {
   box-shadow: var(--shadow);
   transition: background 0.15s, transform 0.05s;
 }
-.theme-toggle:hover { background: var(--accent-soft); }
+.theme-toggle:hover { background: rgba(255,255,255,0.3); }
 .theme-toggle:active { transform: scale(0.97); }
 
 .card {
